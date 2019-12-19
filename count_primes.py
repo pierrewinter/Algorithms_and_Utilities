@@ -8,6 +8,9 @@ def sieve_of_eratosthenes(n, ret_list=False):
     If you would like a list of the prime numbers as well, then set ret_list=True.
     """
 
+    n = int(n)
+    assert n >= 2
+
     prime = [True] * (n+1)
     prime[0] = False
     prime[1] = False
