@@ -20,18 +20,19 @@ class state_count(object):
         This module calculates sums and densities of states for a molecule at a given energy E.
         Currently only sums and densities of vibrational states are implemented.
 
-        :param E: Total energy in the system
-        :param freqs: Array of frequencies in wavenumbers (cm-1)
-        :param TS: Flag which determines if molecule is a minimum or a TS geometry
-        :param linear: Flag which indicates if a molecule has a linear geometry
-        :param ref: Defines the reference of energy, can be from bottom of potential well ('bot')
-        or can be from the zero-point energy of the molecule ('zpe')
+        E: Total energy in the system
+        freqs: Array of frequencies in wavenumbers (cm-1)
+        TS: Flag which determines if molecule is a minimum or a TS geometry
+        linear: Flag which indicates if a molecule has a linear geometry
+        ref: Defines the reference of energy, can be from bottom of potential well ('bot') or can be from the zero-point energy of the molecule ('zpe')
         """
 
         self.E = E  # units of cm-1
+        if ref != 'zpe':
+            self.E = self.E - self.zpe()
         self.freqs = np.sort(freqs)  # units of cm-1
         self.hbar = 1.  # set to 1 since Planck's constant is already taken into account inside frequencies
-        self.ref = ref
+
         if TS:
             assert self.freqs[0] < 0
             self.freqs = self.freqs[1:]
@@ -50,11 +51,7 @@ class state_count(object):
     def cl_count(self):
         """ Calculates a classical sum and density of states using statistical mechanics. """
 
-        if self.ref == 'zpe':
-            E = self.E
-        else:
-            E = self.E - self.zpe()
-
+        E = self.E
         s = self.n_osc
         prod = np.prod(self.vibs)  # No need to multiply vibs by Planck's constant h because vibs in cm-1 already
         summ = E**s / (prod * math.factorial(s))
@@ -65,11 +62,7 @@ class state_count(object):
     def MR_count(self):
         """ Calculates a semi-classical sum of states using Marcus-Rice approach. """
 
-        if self.ref == 'zpe':
-            E = self.E
-        else:
-            E = self.E - self.zpe()
-
+        E = self.E
         s = self.n_osc
         prod = np.prod(self.vibs)  # No need to multiply vibs by Planck's constant h because vibs in cm-1 already
         summ = (E + self.zpe())**s / (prod * math.factorial(s))
@@ -80,11 +73,7 @@ class state_count(object):
     def WR_count(self):
         """ Calculates a semi-classical sum of states using Whitten-Rabinovitch approach. """
 
-        if self.ref == 'zpe':
-            E = self.E
-        else:
-            E = self.E - self.zpe()
-
+        E = self.E
         s = self.n_osc
         denom = np.prod(self.vibs) * math.factorial(s)
         vratio = (np.sum(self.vibs**2) / s) / (self.sum / s)**2
@@ -115,11 +104,7 @@ class state_count(object):
         Egrain defines the spacing within which the counts are taken in units of wavenumbers (cm-1).
         Egrain=50 is usually a safe spacing for molecular vibrations."""
 
-        if self.ref == 'zpe':
-            E = self.E
-        else:
-            E = self.E - self.zpe()
-
+        E = self.E
         R = [int(round(v/Egrain)) for v in self.vibs]
         T = np.zeros(100000)
         M = len(T)-1
